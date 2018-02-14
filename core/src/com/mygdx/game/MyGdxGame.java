@@ -26,7 +26,6 @@ public class MyGdxGame extends ApplicationAdapter {
     private static final float VELOCITY_X = 0f;
     private static final String MAP_PATH = "map/GameMap.tmx";
     private OrthographicCamera orthographicCamera;
-    private Box2DDebugRenderer box2DDebugRenderer;
     private World world;
     private Player player;
     private SpriteBatch batch;
@@ -40,11 +39,10 @@ public class MyGdxGame extends ApplicationAdapter {
         orthographicCamera.setToOrtho(false, Gdx.graphics.getWidth() / SCALE, Gdx.graphics.getHeight() / SCALE);
 
         world = new World(new Vector2(VELOCITY_X, VELOCITY_Y), false);
+        world.setContactListener(new WorldContactListener());
 
         batch = new SpriteBatch();
         texture = new Texture(Player.PLAYER_IMG_PATH);
-
-        box2DDebugRenderer = new Box2DDebugRenderer();
 
         tiledMap = new TmxMapLoader().load(MAP_PATH);
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
@@ -66,16 +64,31 @@ public class MyGdxGame extends ApplicationAdapter {
         batch.draw(texture, player.getBody().getPosition().x * PIXEL_PER_METER - (texture.getWidth() / 2),
                 player.getBody().getPosition().y * PIXEL_PER_METER - (texture.getHeight() / 2));
         batch.end();
-
-        box2DDebugRenderer.render(world, orthographicCamera.combined.scl(PIXEL_PER_METER));
     }
 
     private void update() {
         world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
+        inputUpdate();
         cameraUpdate();
         tiledMapRenderer.setView(orthographicCamera);
         batch.setProjectionMatrix(orthographicCamera.combined);
     }
+
+    private void inputUpdate() {
+        int horizontalForce = 0;
+        if (Gdx.input.isTouched()) {
+            Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            touchPos = orthographicCamera.unproject(touchPos);
+            if (touchPos.x / PIXEL_PER_METER > player.getBody().getPosition().x)
+                horizontalForce += 1;
+            if (touchPos.x / PIXEL_PER_METER < player.getBody().getPosition().x)
+                horizontalForce -= 1;
+            if (touchPos.y / PIXEL_PER_METER > player.getBody().getPosition().y && !player.isJumping())
+                player.getBody().applyForceToCenter(0, Player.JUMP_FORCE, false);
+        }
+        player.getBody().setLinearVelocity(horizontalForce * Player.RUN_FORCE, player.getBody().getLinearVelocity().y);
+    }
+
 
     private void cameraUpdate() {
         Vector3 position = orthographicCamera.position;
@@ -94,7 +107,6 @@ public class MyGdxGame extends ApplicationAdapter {
     public void dispose() {
         texture.dispose();
         batch.dispose();
-        box2DDebugRenderer.dispose();
         world.dispose();
         tiledMapRenderer.dispose();
         tiledMap.dispose();
