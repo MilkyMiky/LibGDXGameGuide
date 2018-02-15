@@ -76,6 +76,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
     private void inputUpdate() {
         int horizontalForce = 0;
+        boolean isJumping = false;
         if (Gdx.input.isTouched()) {
             Vector3 touchPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             touchPos = orthographicCamera.unproject(touchPos);
@@ -84,8 +85,18 @@ public class MyGdxGame extends ApplicationAdapter {
             if (touchPos.x / PIXEL_PER_METER < player.getBody().getPosition().x)
                 horizontalForce -= 1;
             if (touchPos.y / PIXEL_PER_METER > player.getBody().getPosition().y && !player.isJumping())
-                player.getBody().applyForceToCenter(0, Player.JUMP_FORCE, false);
+                isJumping = true;
         }
+        playerUpdate(horizontalForce, isJumping);
+    }
+
+    private void playerUpdate(int horizontalForce, boolean isJumping) {
+        if (player.isDead()) {
+            world.destroyBody(player.getBody());
+            player = new Player(world);
+        }
+        if(isJumping)
+            player.getBody().applyForceToCenter(0, Player.JUMP_FORCE, false);
         player.getBody().setLinearVelocity(horizontalForce * Player.RUN_FORCE, player.getBody().getLinearVelocity().y);
     }
 

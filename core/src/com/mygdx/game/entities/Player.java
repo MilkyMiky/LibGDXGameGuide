@@ -1,7 +1,6 @@
 package com.mygdx.game.entities;
 
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -19,6 +18,7 @@ public class Player {
     private static final float PLAYER_START_Y = 18f;
     private Body body;
     private boolean isJumping = false;
+    private boolean isDead = false;
 
     public Player(World world) {
         createBoxBody(world, PLAYER_START_X, PLAYER_START_Y);
@@ -42,7 +42,7 @@ public class Player {
     }
 
     public void hit() {
-        Gdx.app.log("log", "HIT");
+        isDead = true;
     }
 
     public void setJumping(boolean jumping) {
@@ -51,6 +51,10 @@ public class Player {
     
     public boolean isJumping() {
         return isJumping;
+    }
+
+    public boolean isDead() {
+        return isDead;
     }
 
 
